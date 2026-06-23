@@ -177,7 +177,8 @@
             color: var(--text-muted);
         }
 
-        .input-group input {
+        .input-group input,
+        .input-group select {
             padding: 12px 15px;
             border-radius: 10px;
             border: 1px solid var(--border);
@@ -185,11 +186,17 @@
             font-size: 15px;
             color: var(--text-main);
             transition: all 0.2s;
+            background: var(--card-bg);
         }
 
-        .input-group input:focus {
+        .input-group input:focus,
+        .input-group select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .input-group-full {
+            grid-column: 1 / -1;
         }
 
         .btn-primary {
@@ -372,6 +379,14 @@
                 </div>
                 <form action="/predict" method="post">
                     <div class="input-grid">
+                        <div class="input-group input-group-full">
+                            <label><i class="fa-solid fa-brain"></i> Machine Learning Model</label>
+                            <select name="model" required>
+                                {% for m in model_names %}
+                                <option value="{{ m }}" {% if selected_model == m %}selected{% endif %}>{{ m }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
                         <div class="input-group">
                             <label>Pregnancies</label>
                             <input type="number" step="any" name="Pregnancies" placeholder="0" required value="{{ request.form.get('Pregnancies', '') }}">
@@ -435,6 +450,7 @@
                     <thead>
                         <tr>
                             <th>Date</th>
+                            <th>Model</th>
                             <th>Age</th>
                             <th>Glucose</th>
                             <th>BMI</th>
@@ -472,6 +488,7 @@
         // Save Data to Local Storage
         const newEntry = {
             date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}),
+            model: "{{ selected_model }}",
             age: "{{ request.form.get('Age', '0') }}",
             glucose: "{{ request.form.get('Glucose', '0') }}",
             bmi: "{{ request.form.get('BMI', '0') }}",
@@ -492,8 +509,8 @@
             // Dummy data if empty
             if (historyData.length === 0) {
                 historyData = [
-                    {date: "Oct 24, 10:30 AM", age: 45, glucose: 150, bmi: 32.5, result: "Diabetic"},
-                    {date: "Oct 23, 02:15 PM", age: 32, glucose: 95, bmi: 22.1, result: "Non-Diabetic"}
+                    {date: "Oct 24, 10:30 AM", model: "Decision Tree", age: 45, glucose: 150, bmi: 32.5, result: "Diabetic"},
+                    {date: "Oct 23, 02:15 PM", model: "SVC", age: 32, glucose: 95, bmi: 22.1, result: "Non-Diabetic"}
                 ];
                 localStorage.setItem('diabetesHistory', JSON.stringify(historyData));
             }
@@ -514,6 +531,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${row.date}</td>
+                    <td><small style="color: var(--primary); font-weight:600;">${row.model || 'Decision Tree'}</small></td>
                     <td>${row.age}</td>
                     <td>${row.glucose}</td>
                     <td>${row.bmi}</td>

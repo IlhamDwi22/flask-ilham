@@ -4,16 +4,20 @@ import pandas as pd
 
 app = Flask(__name__)
 
-model = pickle.load(open("model.pkl", "rb"))
+dt_model = pickle.load(open("model_dt.pkl", "rb"))
+svc_model = pickle.load(open("model_svc.pkl", "rb"))
 scaler = pickle.load(open("scaler.pkl", "rb"))
+
+model_names = ["Decision Tree", "SVC"]
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html", model_names=model_names)
 
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    selected_model = request.form.get("model", "Decision Tree")
 
     data = [
         float(request.form["Pregnancies"]),
@@ -39,7 +43,11 @@ def predict():
 
     scaled = scaler.transform(df)
 
-    result = model.predict(scaled)[0]
+    # Pilih model berdasarkan input user
+    if selected_model == "Decision Tree":
+        result = dt_model.predict(scaled)[0]
+    else:
+        result = svc_model.predict(scaled)[0]
 
     prediction = (
         "Diabetic"
@@ -49,9 +57,11 @@ def predict():
 
     return render_template(
         "index.html",
-        prediction=prediction
+        prediction=prediction,
+        model_names=model_names,
+        selected_model=selected_model
     )
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True)
